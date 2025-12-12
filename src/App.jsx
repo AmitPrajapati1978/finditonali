@@ -10,6 +10,9 @@ import {
   Flame,
 } from "lucide-react";
 
+import { supabase } from "./supabase";
+
+
 // ENV VARS
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -171,14 +174,27 @@ export default function App() {
                       <span className="text-2xl font-extrabold text-purple-500">
                         ${p.price}
                       </span>
-                      <a
-                        href={p.aliexpress_url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        onClick={async () => {
+                          try {
+                            await supabase.from("orders").insert([
+                              {
+                                product_id: p.id,
+                                product_name: p.name,
+                                price: p.price
+                              }
+                            ]);
+                          } catch (error) {
+                            console.error("Failed to track order:", error);
+                          }
+
+                          window.open(p.aliexpress_url, "_blank");
+                        }}
                         className="px-4 py-2 rounded-full bg-white text-black text-sm font-bold hover:bg-purple-500 hover:text-white transition"
                       >
                         Buy →
-                      </a>
+                      </button>
+
                     </div>
                   </div>
                 </div>
