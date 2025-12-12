@@ -17,7 +17,21 @@ import { supabase } from "./supabase";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+
+
+
 export default function App() {
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: ""
+  });
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -175,25 +189,16 @@ export default function App() {
                         ${p.price}
                       </span>
                       <button
-                        onClick={async () => {
-                          try {
-                            await supabase.from("orders").insert([
-                              {
-                                product_id: p.id,
-                                product_name: p.name,
-                                price: p.price
-                              }
-                            ]);
-                          } catch (error) {
-                            console.error("Failed to track order:", error);
-                          }
-
-                          window.open(p.aliexpress_url, "_blank");
+                        onClick={() => {
+                          setSelectedProduct(p);
+                          setShowModal(true);
                         }}
                         className="px-4 py-2 rounded-full bg-white text-black text-sm font-bold hover:bg-purple-500 hover:text-white transition"
                       >
                         Buy →
+
                       </button>
+
 
                     </div>
                   </div>
@@ -210,6 +215,86 @@ export default function App() {
           Affiliate Disclosure: We may earn commission at no extra cost to you.
         </div>
       </div>
+
+
+      {showModal && (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div className="bg-[#141414] rounded-xl p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold mb-4">Enter your details</h2>
+
+          <input
+            placeholder="Full Name"
+            className="w-full mb-3 p-2 rounded bg-black border border-white/20"
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
+          />
+
+          <input
+            placeholder="Email"
+            className="w-full mb-3 p-2 rounded bg-black border border-white/20"
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+
+          <input
+            placeholder="Phone Number"
+            className="w-full mb-3 p-2 rounded bg-black border border-white/20"
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
+          />
+
+          <textarea
+            placeholder="Address"
+            className="w-full mb-4 p-2 rounded bg-black border border-white/20"
+            onChange={(e) =>
+              setFormData({ ...formData, address: e.target.value })
+            }
+          />
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 rounded bg-white/10"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={async () => {
+                await supabase.from("orders").insert([
+                  {
+                    product_id: selectedProduct.id,
+                    product_name: selectedProduct.name,
+                    price: selectedProduct.price,
+                    customer_name: formData.name,
+                    customer_email: formData.email,
+                    customer_phone: formData.phone,
+                    customer_address: formData.address
+                  }
+                ]);
+
+                setShowModal(false);
+                setFormData({
+                  name: "",
+                  email: "",
+                  phone: "",
+                  address: ""
+                });
+
+                alert("Order submitted successfully!");
+              }}
+              className="px-4 py-2 rounded bg-purple-600 font-bold"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     </div>
   );
 }
